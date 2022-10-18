@@ -1,0 +1,245 @@
+---
+title: "lab Data viz avec ggplot"
+author: "lotfi"
+date: "21/11/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+## Contenu 
+Creer des visualisations et des graphiques a  l'aide du package `ggplot2` : 
+- Nuage de points(Scatterplot)
+- Graphique en ligne ( lineplot)
+- Histogramme
+- Boxplot (boite a  moustache) 
+- Barplot 
+- facettes 
+
+
+## Scatterplot
+### Preparation des donnees 
+On filtre le jeu de donnees `flights`  pour avoir juste les lignes pour la compagnie aerienne c.-a -d. `carrier`  ayant la valeur "AS"  pour  Alaska Airlines. 
+
+```{r}
+alaska_flights <- flights %>% 
+  filter(carrier == "AS")
+View(alaska_flights)
+```
+Pour le moment , ne vous souciez pas de ce code . Nous allons  l'examiner en detail dans les prochains ateliers. 
+
+
+### Premier Scatterplot
+Nous allons commencer par la creation d'un diagramme de dispersion ou nuages de points afin de  visualiser la relation entre deux variables numeriques. 
+
+Plus precisement, nous allons visualiser la relation entre les deux variables  `dep_delay` et `arr_delay` du dataset `alaska_flights`.
+
+Reproduisez et executez le code affiche dans la diapositive pour creer le graphique. Faites tres attention a l'orthographe, aux parentheses et a la casse (R est sensible a   la casse)!
+
+```{r}
+
+```
+
+
+### chevauchement des points
+
+En cas de chevauchement, il est difficile de connaitre le nombre de points qui sont traces. on peut soit : 
+
+-ajuster la transparence des points
+-ou bien disperser  les points pour reduire le chevauchement avec le jitter aleatoire. 
+
+#### Ajuster la transparence des points
+Modifier la transparence des points en agissant sur  l'argument alpha dans geom_point().la valeur 0 signifie que  les points sont  100% transparents et 1 signifie 100% opaques. 
+
+```{r}
+
+```
+Nous remarquons que la transparence des points est cumulative : les zones avec un degre eleve de chavechement sont plus sombres.
+Notez egalement qu'il n'y a pas de aes() autour de alpha = 0,2. 
+
+
+#### Disperser les points pour reduire le chevauchement
+
+Pour disperser les points du scatterplot , utiliser geom_jitter() au lieu de geom_point(). les arguments `width ` et `height ` du `geom_jitter `, permettent de specifier la quantite de gigue a ajouter.  Essayer la valeur 30 pour les deux parametres.
+
+```{r}
+ggplot(data = alaska_flights) + geom_point(mapping = aes(x = dep_delay, y = arr_delay), color="blue", alpha=0.5) 
+  
+```
+
+
+
+## Line plot
+un graphique lineaire ou bien  lineplot permet de montrer  egalement la relation entre deux variables numeriques, mais cette fois-ci lorsque la variable sur l'axe des x est de nature sequentielle (existence d'un ordre inherent a la variable x).
+
+Nous allons pour le moment utiliser un sous-ensemble de `weather` ayant `origin` egale a   `"EWR"`,  `month` egale a   `1`, **et**  `day` entre `1` et `15`
+```{r}
+january_weather <- weather %>% 
+  filter(origin == "EWR" & month == 1 & day <= 15)
+```
+
+Essayons de creer  un line plot des temperatures enregistrees dans la periode choisie a  l'aide du `geom_line()`.Tracer donc `temp` en fonction de`time_hour`
+
+```{r}
+ggplot(data = january_weather, mapping = aes(x =temp, y =time_hour )) +
+  geom_line()
+```
+
+
+## Histogramme
+Considerons toujours la  variable `temp`, mais cette fois-ci nous nous interessons a  la *distribution* de cette variable et non pas a son evolution dans le temps . 
+
+Pour tracer notre histogramme, nous allons faire appel a  `geom_histogram()` au lieu de `geom_point()` et nous allons renseigne une seule variable `temp` au niveau de la fonction `aes()`.
+```{r}
+ggplot(data = weather, mapping = aes(x =temp )) +
+  geom_histogram()
+```
+
+
+Essayons de creer  des bordures verticales blanches pour delimiter les bins  en ajoutant l'argument `color = "white"` argument to `geom_histogram()`
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram()
+```
+
+Nous pouvons egalement modifier la couleur des barres en agissant sur  l'argument `fill`. Par exemple, on peut mettre `fill = "steelblue"` :
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram(color = "white" ,fill = "steelblue")
+```
+
+### Adjustement des bins de l'histogramme
+
+Modifier le nombre de bins via l'argument `bins` , par exemple 40.
+
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram(bins = , color = "white" , fill = "steelblue")
+```
+
+
+Cette fois-ci, ajuster la largeur des bins via  le parametre `binwidth`. Mettre 10 par exemple.
+
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram(bins = 110, color = "white" ,fill = "steelblue")
+```
+
+
+## facets
+Nous allons utiliser le  *faceting*  pour  creer plusieurs copies du meme type de graphique. 
+
+Pour creer  des histogrammes de `temp` pour chaque mois `month`. 
+Ajouter une couche `facet_wrap(~ month)`.
+
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram(binwidth = 5, color = "white")  #binwith unite de mesure est la temperature
+```
+
+Vous pouvez personnaliser le nombre de lignes et de colonnes dans la grille  en precisant les arguments  `nrow` et `ncol` a  l'interieur de  `facet_wrap()`. par exemple  `nrow = 4`.
+
+```{r}
+ggplot(data = weather, mapping = aes(x = temp)) +
+  geom_histogram(binwidth = 5, color = "black") + 
+  facet_wrap(~ month, nrow = 4 )  #afficher graphique selon une certaine valeur 
+```
+
+
+## Boxplots ou boite a  moustache
+### Boxplot pour examiner la distribution d'une variable
+Pour examiner la distribution de la variable `temp`, produiser boxplot via le  mapping de la variable `temp`  au paramC(tre y au niveau des aesthetic et l'utilsaition du geom adequat.
+
+```{r}
+ggplot(data = weather, mapping = aes( y = temp)) +
+geom_boxplot()    
+
+```
+
+### Boxplot pour comparer la distribution d'une variable a  travers une autre
+
+Maintenant pour comparer la distribution de la temperature pour les differents mois.
+Produiser plusieurs boxplots via le mapping de la variable  `month` a  la position x des aesthetic et  `temp` a  la position y a  l'interieur du  `geom_boxplot()`.
+utiliser  `factor(month)` au lieu de `month`.
+
+```{r}
+glimpse(weather)
+```
+
+
+```{r}
+ggplot(data = weather, mapping = aes(x = factor(month) , y = temp)) + #factor : transform variable int to var categorial
+geom_boxplot()
+
+```
+
+
+## Barplots
+### Une seule variable categorielle 
+visualiser le nombre de vols interieurs au depart de New York  en 2013, pour  chaque compagnie aerienne.    
+Examiner  la  variable  `carrier` du data frame  `flights`. Utiliser donc le `geom_` convenable pour creer le  barplot en  associant la varaiabe `carrier` a la position `x`.
+
+```{r}
+ggplot(data = flights, mapping = aes(x = carrier)) +
+  geom_bar()
+```
+
+Quelles sont les compagnies qui'ont enregistre le plus de vols au depart de NYC en 2013 ? Pour avoir le nom des compagnies a  partir des codes il faut se referer au dataset  `airlines`.
+
+### Deux variables categorielles
+
+#### barplots empiles
+
+Essayer d'examiner la distribution *jointe* des vols interieurs au depart de NYC par `carrier`  ainsi que par `origin`. 
+
+Associer la variable `origin` a  l'aide de `fill = origin`  a  l'interieur de la fonction `aes()` .
+
+```{r}
+ggplot(data = flights, mapping = aes(x = carrier, fill = origin)) +
+  geom_bar()
+```
+
+Il s'agit bien d'un barplot empile (stacked barplot). 
+
+
+#### barplots esquives
+Introduiser  l'argument `position = "dodge"` dans le  `geom_bar()` pour creer un barplot esquive (dodged barplot) 
+
+```{r}
+ggplot(data = flights, mapping = aes(x = carrier, fill = origin)) +
+  geom_bar(position = "dodge")
+```
+
+
+Notez que la largeur des barres pour `AS`, `F9`, `FL`, `HA` et `YV` est differente des autres. On peut modifier  l'argument `position` pour qu'elles aient la mC*me taille  en utilisant la fonction `position_dodge()`. Executer le code suivant pour visualiser le resultat.
+
+```{r}
+ggplot(data = flights, mapping = aes(x = carrier, fill = origin)) +
+  geom_bar(position = position_dodge(preserve = "single"))  #preserve:uniform for all bars
+```
+
+
+#### barplots avec facet
+
+la couche facet peut a*tre utilisee avec les barplots pour  visualiser la frequence de la variable  `carrier` a  travers les valeurs prises par  `origin`.
+
+Dans ce scenario au lieu de faire le  mapping de `origin` a  l'aestetic  `fill`, utiliser `origin` en tant que variable pour creer ce que l'on appelle small multiples du barplot.
+
+```{r}
+ggplot(data = flights, mapping = aes(x = carrier)) +  #outside aes = figee
+  geom_bar() +
+  facet_wrap(~ origin, ncol=1)
+  
+```
+
+ 
+
+
+
+
