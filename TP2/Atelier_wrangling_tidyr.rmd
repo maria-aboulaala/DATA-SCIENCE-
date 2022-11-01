@@ -1,0 +1,135 @@
+---
+title: "Atelier data tidying avec tidyr"
+author: "lotfi"
+date: "15/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+```
+
+
+## dataset
+
+le dataset `world_bank_pop` contient des donnees de la Banque mondiale sur la
+population par pays entre 2000 et 2018.
+
+## votre tour
+Explorer le contenu de ce dataset avec diffrentes methodes
+```{r}
+world_bank_pop
+glimpse(world_bank_pop)
+```
+
+```{r}
+world_bank_pop %>% distinct(indicator)
+```
+
+`SP.POP.GROW` est la croissance demographique, `SP.POP.TOTL` correspond C  la
+population totale et `SP.URB.*` correspondent aux mC*mes indicateurs uniquement
+pour les zones urbaines.
+
+
+## votre tour
+Dans un premier temps nous allons nous interesser juste aux sous ensemble de donnees, relatif C  la population total et aux pays ayant les code iso suivant `TUN `, ` MAR`, `DZA`,`ESP` et C  l'indicateur `SP.POP.TOTL` .
+Essayer donc de generer ce jeu de donnees C  partir du dataset initial. 
+
+Vous pouvez utiliser `Alt + F6` pour l'operateur d'affectation
+
+```{r}
+world_bank_pop_total <- world_bank_pop %>% 
+  filter(indicator== "SP.POP.TOTL",country %in% c("TUN", "MAR","DAZ", "ESP") ) %>%
+  select(- indicator) 
+world_bank_pop_total  
+```
+
+
+
+la correspondance entre code et nom du pays peut etre consulte sur l'adresse suivante :
+[Country  Codes](https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm "Country Codes - worldbank").
+
+
+## votre tour 
+Nous devons  produire un datset tidy bien range  oC9 chaque variable correspond a  une colonne. 
+l'annee est repartie sur plusieurs colonnes, donc nous allons rassembler (garther) ces colonnes au niveau d'une seul variable portant le nom `Year` a l'aide du verbe `pivot_longer`.
+```{r}
+world_bank_pop_total_longer <- world_bank_pop_total  %>% 
+  pivot_longer(`2000`:`2017`,names_to = "Year", values_to ="Total" ,
+               names_transform = list(Year = as.integer))  
+glimpse(world_bank_pop_total_longer)
+
+```
+
+
+
+## votre tour 
+A l'aide du dataset que vous venez de ceer , essayer de genere le grahique qui illustre l'evoltion de la population total pour les quatres pays.  
+```{r}
+world_bank_pop_total_longer %>% 
+    ggplot( aes(x = Year, y = Total , color = country)  ) + 
+    geom_line()  +
+    labs(x="Year" , y = "Total Popoulation" , title = "Total population Evolution " )
+  
+```
+
+
+## votre tour  
+Maintenant nous allons considerer le dataset  world_bank_pop_all_longer contenant l'ensemble des indicateur. Ce data set est obtenu en rassamenlant les colonnes des annees pour le datasset initial world_bank_pop. Exceuter le chunk suivant pour examiner ce data set.
+
+```{r}
+world_bank_pop_all_longer <- world_bank_pop %>%
+  pivot_longer(`2000`:`2017`, names_to = "Year", values_to = "value",names_transform = list(Year = as.integer)) 
+world_bank_pop_all_longer
+```
+
+
+Nous rappelons que `SP.POP.GROW` est la croissance demographique, `SP.POP.TOTL` correspond C  la population totale et `SP.URB.*` correspondent aux mC*mes indicateurs uniquement
+pour les zones urbaines.
+
+
+# votre tour
+Commancant par separer cette variable en  deux nouvelles variables : area (`URB` ou `POP`) et la variable en question (`TOTL` ou `GROW`),  a l'aide du verbe `separate()`
+
+```{r}
+world_bank_pop_longer_sep  <- world_bank_pop_all_longer  %>%
+     separate(indicator, c(NA, "area", "variable"))
+world_bank_pop_longer_sep
+```
+
+
+
+# votre tour 
+Nous pouvons maintenant completer le rangement de nos donnees en faisant pivoter (spread) la colonne `variable ` et la colonne `Value`  pour creer  les deux colonnes `TOTL`TOTL et `GROW` et ce a travers l'emploi du verbe  `pivot_wider` :
+
+```{r}
+world_bank_pop_wider  <-  world_bank_pop_longer_sep %>%
+  pivot_wider(names_from = variable, values_from = value)
+world_bank_pop_wider
+```
+
+
+## votre tour 
+completer  le chunk suivant C  l'aide des verbes appropries :       
+```{r}
+world_bank_pop_wider %>%  filter(country %in% c("TUN","MAR","DZA","ESP") ) %>% 
+    ggplot( aes(x = Year, y = GROW, color = country)  ) + 
+    geom_line()  +
+    facet_wrap(~area) +
+    labs(x="Year" , y = "Total Popoulation" , title = "Evolution of total population" )
+  
+```
+## new col with donnee precedente de chaque year
+
+```{r}
+world_bank_pop_total_longer %>%
+  filter(country=="MAR") %>%
+mutate(total_lag=lag(Total))
+```
+
+
+```{r}
+?distinct
+```
+
